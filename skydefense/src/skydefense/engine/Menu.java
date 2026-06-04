@@ -43,6 +43,13 @@ public class Menu extends JPanel {
             fuenteHover = new Font("Arial", Font.BOLD, 32);
         }
 
+        try {
+            // Leemos el archivo PNG de la nave
+            spriteNave = ImageIO.read(new File("images/nave.png"));
+        } catch (Exception e) {
+            System.err.println("No se pudo cargar la imagen de la nave. Verificá la ruta y el nombre.");
+        }
+
         // ==========================================
         // CREACIÓN DE HITBOXES (Ajustados a la fuente)
         // ==========================================
@@ -139,19 +146,25 @@ public class Menu extends JPanel {
         }
 
         // ==========================================
-        // 3. NAVE ESPACIAL (Área reservada)
+        // 3. NAVE ESPACIAL (DIBUJO DINÁMICO)
         // ==========================================
-        g2d.setColor(Color.DARK_GRAY);
-        g2d.setStroke(new BasicStroke(1));
-        g2d.drawRect(450, 180, 280, 300);
-        
-        g2d.setFont(new Font("Arial", Font.ITALIC, 14));
-        g2d.setColor(Color.GRAY);
-        g2d.drawString("[ Espacio para Sprite de Nave ]", 495, 320);
-
-        g2d.setColor(Color.RED);
-        int[] xPuntos = {560, 620, 560};
-        int[] yPuntos = {290, 320, 350};
-        g2d.fillPolygon(xPuntos, yPuntos, 3);
+        if (spriteNave != null) {
+            // Podés ajustar estos números si tu PNG es muy grande o muy chico
+            int anchoNave = 100;
+            int altoNave = 100;
+            
+            // Coordenada X fija del lado derecho
+            int naveX = 500; 
+            
+            if (hoveredIndex != -1) {
+                // Si hay una opción seleccionada, la nave se alinea en el eje Y
+                // Le restamos la mitad de la altura de la nave para que apunte directo al centro de la palabra
+                int naveY = posicionesY[hoveredIndex] - (altoNave / 2) - 10; 
+                g2d.drawImage(spriteNave, naveX, naveY, anchoNave, altoNave, null);
+            } else {
+                // Posición por defecto si el mouse no está tocando nada y no usaste el teclado
+                g2d.drawImage(spriteNave, naveX, 280, anchoNave, altoNave, null);
+            }
+        }
     }
 }
