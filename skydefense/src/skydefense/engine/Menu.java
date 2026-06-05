@@ -1,127 +1,141 @@
 package skydefense.engine;
 
+import java.awt.image.BufferedImage;
 import javax.swing.*;
-import javax.imageio.ImageIO;
+import java.awt.*;
 import java.io.File;
+import javax.imageio.ImageIO;
+import java.awt.geom.AffineTransform;
+import java.util.ArrayList;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
-import java.awt.Canvas;
-import java.awt.Image;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseMotionAdapter;
-import java.awt.event.MouseEvent;
+public class Menu extends JPanel {
 
-public class Menu extends JPanel { 
-
-    private String[] opciones = {"PLAY", "LEADERBOARD", "OPTIONS", "EXIT"};
+    private String[] opciones = {"PLAY", "SCORES", "OPTIONS", "EXIT"};
     private Rectangle[] hitboxes = new Rectangle[4];
     private int hoveredIndex = -1;
 
     private int[] posicionesY = {200, 275, 350, 425};
-    private int posicionXBase = 65; 
-    
+    private int posicionXBase = 75;
+
     private Font fuenteNormal;
-    private Font fuenteHover; 
-    private Font fuenteTitulo; 
+    private Font fuenteHover;
+    private Font fuenteTitulo;
     
-    private Image spriteNave; 
+    private int mouseX = 500;
+    private int mouseY = 280;
+
+    private BufferedImage spriteNave;
+    private BufferedImage logo;
+
+    private ArrayList<Disparo> disparos = new ArrayList<>();
 
     public Menu() {
+        System.out.println("Working dir: " + new File(".").getAbsolutePath());
         setBackground(Color.BLACK);
 
-        // ==========================================
-        // RUTA INTELIGENTE (Detecta la arquitectura)
-        // ==========================================
-        String baseRes = "skydefense/res/";
-        if (!new File(baseRes).exists()) {
-            baseRes = "res/"; // Fallback por si Eclipse ajusta el directorio de trabajo
-        }
-
-        // ==========================================
-        // 1. CARGA DE FUENTES
-        // ==========================================
         try {
-            File archivoArcade = new File(baseRes + "font/Arcade.ttf");
-            Font baseArcade = Font.createFont(Font.TRUETYPE_FONT, archivoArcade);
-            fuenteNormal = baseArcade.deriveFont(35f); 
-            fuenteHover = baseArcade.deriveFont(45f); 
+            File archivoFuente = new File("skydefense/res/font/Arcade.ttf");
+            File archivoNightmare = new File("skydefense/res/font/Nightmare Codehack.otf");
 
-            File archivoNightmare = new File(baseRes + "font/Nightmare Codehack.otf");
+            Font fuenteBase = Font.createFont(Font.TRUETYPE_FONT, archivoFuente);
+            fuenteNormal = fuenteBase.deriveFont(40f);
+            fuenteHover = fuenteBase.deriveFont(50f);
+
             Font baseNightmare = Font.createFont(Font.TRUETYPE_FONT, archivoNightmare);
-            fuenteTitulo = baseNightmare.deriveFont(70f); 
-            
+            fuenteTitulo = baseNightmare.deriveFont(70f);
+
         } catch (Exception e) {
-            System.err.println("⚠ AVISO: No se encontraron las fuentes en " + baseRes + "font/");
+            System.err.println("No se pudo cargar la fuente personalizada. Cargando Arial de repuesto.");
             fuenteNormal = new Font("Arial", Font.BOLD, 26);
             fuenteHover = new Font("Arial", Font.BOLD, 32);
-            fuenteTitulo = new Font("Arial", Font.BOLD, 50);
+            fuenteTitulo = new Font("Arial", Font.BOLD, 60);
         }
 
-        // ==========================================
-        // 2. CARGA DE LA IMAGEN DE LA NAVE
-        // ==========================================
         try {
-            File archivoNave = new File(baseRes + "sprite/nave.png");
-            spriteNave = ImageIO.read(archivoNave);
-            System.out.println("✅ Imagen cargada con éxito desde: " + archivoNave.getAbsolutePath());
+            spriteNave = ImageIO.read(new File("skydefense/res/sprite/nave.png"));
         } catch (Exception e) {
-            System.err.println("⚠ AVISO: No se pudo cargar nave.png en " + baseRes + "sprite/");
-            spriteNave = null; 
+            System.err.println("No se pudo cargar la imagen de la nave. Verificá la ruta y el nombre.");
         }
 
-        // ==========================================
-        // CREACIÓN DE HITBOXES Y EVENTOS
-        // ==========================================
+        try {
+            logo = ImageIO.read(new File("skydefense/res/sprite/logo.png"));
+        } catch (Exception e) {
+            System.err.println("No se pudo cargar la imagen del logo. Verificá la ruta y el nombre.");
+        }
+
         Canvas c = new Canvas();
         FontMetrics fm = c.getFontMetrics(fuenteNormal);
 
         for (int i = 0; i < opciones.length; i++) {
             int anchoTexto = fm.stringWidth(opciones[i]);
             int altoTexto = fm.getHeight();
-            int ascent = fm.getAscent(); 
+            int ascent = fm.getAscent();
+
             hitboxes[i] = new Rectangle(posicionXBase, posicionesY[i] - ascent, anchoTexto, altoTexto);
         }
 
-        setFocusable(true); 
-        requestFocusInWindow();
+        addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+        	@Override
+        	public void mouseMoved(java.awt.event.MouseEvent e) {
+        	    int previousHover = hoveredIndex;
+        	    hoveredIndex = -1;
 
-        addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                int tecla = e.getKeyCode();
-                if (tecla == KeyEvent.VK_UP || tecla == KeyEvent.VK_W) {
-                    if (hoveredIndex > 0) hoveredIndex--;
-                    else if (hoveredIndex == -1) hoveredIndex = 0;
-                    repaint();
-                } else if (tecla == KeyEvent.VK_DOWN || tecla == KeyEvent.VK_S) {
-                    if (hoveredIndex < opciones.length - 1) hoveredIndex++;
-                    else if (hoveredIndex == -1) hoveredIndex = 0;
-                    repaint();
-                }
+        	    mouseY = e.getY();
+        	    mouseX = e.getX();
+        	    
+        	    for (int i = 0; i < hitboxes.length; i++) {
+        	        if (hitboxes[i].contains(e.getPoint())) {
+        	            hoveredIndex = i;
+        	            break;
+        	        }
+        	    }
+
+        	    if (previousHover != hoveredIndex) {
+        	        repaint();
+        	    }
+
+        	    repaint();
             }
         });
 
-        addMouseMotionListener(new MouseMotionAdapter() {
+        addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
-            public void mouseMoved(MouseEvent e) {
-                int previousHover = hoveredIndex;
-                hoveredIndex = -1; 
-                for (int i = 0; i < hitboxes.length; i++) {
-                    if (hitboxes[i].contains(e.getPoint())) {
-                        hoveredIndex = i;
-                        break;
-                    }
-                }
-                if (previousHover != hoveredIndex) repaint();
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                disparar();
             }
         });
+
+        Timer timer = new Timer(16, e -> {
+            for (int i = disparos.size() - 1; i >= 0; i--) {
+                Disparo d = disparos.get(i);
+                d.mover();
+
+                if (d.estaFuera(getWidth(), getHeight())) {
+                    disparos.remove(i);
+                }
+            }
+
+            repaint();
+        });
+
+        timer.start();
+    }
+
+    private void disparar() {
+        int anchoNave = 180;
+        int altoNave = 180;
+        int naveX = 500;
+        int naveY = 250;
+
+        double centroX = naveX + anchoNave / 2.0;
+        double centroY = naveY + altoNave / 2.0;
+
+        double angulo = Math.atan2(mouseY - centroY, mouseX - centroX);
+
+        double puntaX = centroX + Math.cos(angulo) * (altoNave / 2.0);
+        double puntaY = centroY + Math.sin(angulo) * (altoNave / 2.0);
+
+        disparos.add(new Disparo(puntaX, puntaY, angulo));
     }
 
     @Override
@@ -130,44 +144,37 @@ public class Menu extends JPanel {
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // 1. TÍTULO
-        g2d.setFont(fuenteTitulo); 
-        int tituloY = 100;
-        g2d.setColor(Color.RED);
-        g2d.drawString("S", 400, tituloY);
-        g2d.setColor(Color.WHITE);
-        g2d.drawString("KY", 430, tituloY); 
-        g2d.setColor(Color.BLUE);
-        g2d.drawString("D", 510, tituloY);
-        g2d.setColor(Color.WHITE);
-        g2d.drawString("EFENSE", 545, tituloY);
+        if (logo != null) {
+            int altoLogo = 150;
+            int anchoLogo = (int) ((double) logo.getWidth() / logo.getHeight() * altoLogo);
 
-        // 2. TEXTOS INTERACTIVOS
+            int logoX = 450;
+            int logoY = 5;
+
+            g2d.drawImage(logo, logoX, logoY, anchoLogo, altoLogo, null);
+        }
+
         for (int i = 0; i < opciones.length; i++) {
             String texto = opciones[i];
-            
+
             if (i == hoveredIndex) {
                 g2d.setFont(fuenteHover);
+                g2d.setColor(Color.ORANGE);
+
                 FontMetrics fmHover = g2d.getFontMetrics();
                 int anchoNormal = hitboxes[i].width;
                 int anchoHover = fmHover.stringWidth(texto);
                 int xAjustado = posicionXBase - ((anchoHover - anchoNormal) / 2);
-                
-                Color colorResplandor = new Color(255, 255, 0, 80); 
-                g2d.setColor(colorResplandor);
-                int desfase = 3; 
-                g2d.drawString(texto, xAjustado - desfase, posicionesY[i] - desfase);
-                g2d.drawString(texto, xAjustado + desfase, posicionesY[i] + desfase);
-                g2d.drawString(texto, xAjustado - desfase, posicionesY[i] + desfase);
-                g2d.drawString(texto, xAjustado + desfase, posicionesY[i] - desfase);
 
-                g2d.setColor(Color.YELLOW); 
                 g2d.drawString(texto, xAjustado, posicionesY[i]);
+
             } else {
                 g2d.setFont(fuenteNormal);
-                Color blancoResplandor = new Color(255, 255, 255, 60); 
+
+                Color blancoResplandor = new Color(255, 255, 255, 60);
                 g2d.setColor(blancoResplandor);
-                int desfase = 2; 
+
+                int desfase = 2;
                 g2d.drawString(texto, posicionXBase - desfase, posicionesY[i] - desfase);
                 g2d.drawString(texto, posicionXBase + desfase, posicionesY[i] + desfase);
                 g2d.drawString(texto, posicionXBase - desfase, posicionesY[i] + desfase);
@@ -178,20 +185,77 @@ public class Menu extends JPanel {
             }
         }
 
-        // 3. NAVE ESPACIAL
-        int anchoNave = 100;
-        int altoNave = 100;
-        int naveX = 500; 
-        int naveY = (hoveredIndex != -1) ? (posicionesY[hoveredIndex] - (altoNave / 2) - 10) : 280;
-        
+        for (Disparo d : disparos) {
+            d.dibujar(g2d);
+        }
+
         if (spriteNave != null) {
+            int anchoNave = 180;
+            int altoNave = 180;
+            int naveX = 500;
+            int naveY = 250;
+
+            int centroX = naveX + anchoNave / 2;
+            int centroY = naveY + altoNave / 2;
+
+            double angulo = Math.atan2(mouseY - centroY, mouseX - centroX);
+
+            AffineTransform old = g2d.getTransform();
+
+            g2d.rotate(angulo + Math.PI / 2, centroX, centroY);
+
             g2d.drawImage(spriteNave, naveX, naveY, anchoNave, altoNave, null);
-        } else {
-            g2d.setColor(Color.MAGENTA);
-            g2d.fillRect(naveX, naveY, anchoNave, altoNave);
-            g2d.setColor(Color.WHITE);
-            g2d.setFont(new Font("Arial", Font.BOLD, 12));
-            g2d.drawString("IMG FAIL", naveX + 25, naveY + 50);
+
+            g2d.setTransform(old);
+        }
+    }
+
+    private class Disparo {
+        private double x;
+        private double y;
+        private double velocidadX;
+        private double velocidadY;
+
+        public Disparo(double x, double y, double angulo) {
+            this.x = x;
+            this.y = y;
+
+            double velocidad = 12;
+            this.velocidadX = Math.cos(angulo) * velocidad;
+            this.velocidadY = Math.sin(angulo) * velocidad;
+        }
+
+        public void mover() {
+            x += velocidadX;
+            y += velocidadY;
+        }
+
+        public void dibujar(Graphics2D g2d) {
+
+            g2d.setColor(Color.ORANGE);
+
+            double angulo = Math.atan2(velocidadY, velocidadX);
+
+            int largo = 16;
+
+            int x2 = (int) (x - Math.cos(angulo) * largo);
+            int y2 = (int) (y - Math.sin(angulo) * largo);
+
+            Stroke oldStroke = g2d.getStroke();
+
+            g2d.setStroke(new BasicStroke(
+                6,
+                BasicStroke.CAP_ROUND,
+                BasicStroke.JOIN_ROUND
+            ));
+
+            g2d.drawLine((int) x, (int) y, x2, y2);
+
+            g2d.setStroke(oldStroke);
+        }
+
+        public boolean estaFuera(int anchoPanel, int altoPanel) {
+            return x < 0 || x > anchoPanel || y < 0 || y > altoPanel;
         }
     }
 }
