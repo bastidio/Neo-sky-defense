@@ -163,7 +163,7 @@ public class GamePanel extends JPanel {
         double xExplosion = misil.getPosicionX();
         double yExplosion = misil.getPosicionY();
 
-        explosiones.add(new Explosion(xExplosion, yExplosion, "skydefense/res/sprite/explosion.gif"));
+        explosiones.add(new Explosion(xExplosion, yExplosion, "skydefense/res/sprite/transparent-Photoroom (3) - copia.png", "skydefense/res/sprite/transparent-Photoroom (3) - copia.json"));
 
         double distancia = misil.calcularDistancia(nave.getPosicionX(), nave.getAltitud());
 
