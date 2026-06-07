@@ -3,6 +3,7 @@ package skydefense.model;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.Random;
+import java.awt.Rectangle;
 
 public class Dron extends ObjetoVolador {
 
@@ -33,6 +34,11 @@ public class Dron extends ObjetoVolador {
         }
 
         this.tiempoHastaProximoDisparo = 0.6 + random.nextDouble() * 2.2;
+    }
+    public Rectangle getHitbox() {
+        int ancho = 75;
+        int alto = 75;
+        return new Rectangle((int) posicionX - ancho / 2, (int) posicionY - alto / 2, ancho, alto);
     }
 
     @Override
