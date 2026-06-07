@@ -146,6 +146,29 @@ public class GamePanel extends JPanel {
                 explosiones.remove(i);
             }
         }
+        Rectangle hitboxNave = nave.getHitbox();
+
+        // 1. Colisiones con Misiles
+        for (int i = misiles.size() - 1; i >= 0; i--) {
+            Misil misil = misiles.get(i);
+            
+            // Verificamos si la caja del misil se superpone con la caja de la nave
+            if (misil.estaActivo() && hitboxNave.intersects(misil.getHitbox())) {
+                // Choque directo: Daño grave y destrucción del proyectil
+                nave.reducirEnergia(40); 
+                explosiones.add(new Explosion(misil.getPosicionX(), misil.getPosicionY(), "skydefense/res/sprite/transparent-Photoroom (3) - copia.png", "skydefense/res/sprite/transparent-Photoroom (3) - copia.json"));
+                misiles.remove(i);
+
+                // Evaluar estado del jugador tras el impacto directo
+                if (nave.energiaAgotada()) {
+                    jugador.perderVida();
+                    nave.restaurarEnergia();
+                }
+                if (jugador.estaMuerto()) {
+                    terminarJuego(false);
+                }
+            }
+        }
 
         if (escuadron.nivelTerminado() && misiles.isEmpty() && explosiones.isEmpty()) {
             jugador.sumarPuntos(300);
