@@ -33,7 +33,7 @@ public class Menu extends JPanel {
 
     private BufferedImage spriteNave;
     private BufferedImage logo;
-    private BufferedImage logoProgramadores;
+    private Image gifAmigos;
 
     private BufferedImage[] presentaciones = new BufferedImage[4];
     private int presentacionActual = 0;
@@ -127,10 +127,10 @@ public class Menu extends JPanel {
             System.err.println("No se pudo cargar la imagen del logo. Verificá la ruta y el nombre.");
         }
 
-        try {
-            logoProgramadores = ImageIO.read(new File("skydefense/res/sprite/logoProgramadores.jpeg"));
+       try {
+            gifAmigos = new ImageIcon("skydefense/res/sprite/betterLogo.gif").getImage();
         } catch (Exception e) {
-            System.err.println("No se pudo cargar la imagen logoProgramadores. Verificá la ruta y el nombre.");
+            System.err.println("No se pudo cargar el GIF de la intro betterLogo.");
         }
 
         try {
@@ -359,7 +359,7 @@ public class Menu extends JPanel {
                 alphaLogoProgramadores = 1f;
                 ((Timer) e.getSource()).stop();
 
-                Timer espera = new Timer(1500, ev -> {
+                Timer espera = new Timer(4500, ev -> {
                     ((Timer) ev.getSource()).stop();
                     estadoPantalla = EstadoPantalla.MENU;
                     reproducirMusicaLogo();
@@ -828,20 +828,16 @@ public class Menu extends JPanel {
         g2d.setColor(Color.BLACK);
         g2d.fillRect(0, 0, getWidth(), getHeight());
 
-        if (logoProgramadores != null) {
-            Composite oldComposite = g2d.getComposite();
+        if (gifAmigos != null) {
+        
+            int anchoIntro = 450; 
+            int altoIntro = 350;
 
-            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alphaLogoProgramadores));
+            int x = (getWidth() - anchoIntro) / 2;
+            int y = (getHeight() - altoIntro) / 2;
 
-            int altoLogo = 180;
-            int anchoLogo = (int) ((double) logoProgramadores.getWidth() / logoProgramadores.getHeight() * altoLogo);
-
-            int logoX = (getWidth() - anchoLogo) / 2;
-            int logoY = (getHeight() - altoLogo) / 2;
-
-            g2d.drawImage(logoProgramadores, logoX, logoY, anchoLogo, altoLogo, null);
-
-            g2d.setComposite(oldComposite);
+            
+            g2d.drawImage(gifAmigos, x, y, anchoIntro, altoIntro, this);
         }
     }
 
