@@ -2,6 +2,8 @@ package skydefense.model;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.awt.Rectangle;
+
 
 public class Nave extends ObjetoVolador {
 
@@ -82,6 +84,11 @@ public class Nave extends ObjetoVolador {
 
     public int getAltitud() {
         return altitud;
+    }
+    public Rectangle getHitbox() {
+        int ancho = 90;
+        int alto = 90;
+        return new Rectangle((int) posicionX - ancho / 2, (int) posicionY - alto / 2, ancho, alto);
     }
 
     public void setIzquierda(boolean izquierda) {
