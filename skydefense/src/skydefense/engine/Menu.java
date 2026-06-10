@@ -477,7 +477,6 @@ public class Menu extends JPanel {
 
         detenerMusicaPresentacion();
         detenerMusicaLogo();
-        detenerMusicaJuego();
         detenerMusicaLogoProgramadores();
 
         JFrame ventana = (JFrame) SwingUtilities.getWindowAncestor(this);

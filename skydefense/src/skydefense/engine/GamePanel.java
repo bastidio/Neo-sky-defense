@@ -15,6 +15,10 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.FloatControl;
 
 public class GamePanel extends JPanel {
 
@@ -32,6 +36,8 @@ public class GamePanel extends JPanel {
     private BufferedImage spriteDron;
     private BufferedImage spriteMisil;
     private BufferedImage logo;
+    
+    private Clip musicaJuego;
 
     private Timer gameLoop;
     private long ultimoTiempo;
@@ -44,6 +50,17 @@ public class GamePanel extends JPanel {
     private Rectangle boundsVentana;
 
     private Rectangle botonVolverMenu = new Rectangle(250, 420, 300, 55);
+    
+    private boolean juegoPausado = false;
+    private boolean confirmandoVolverMenu = false;
+
+    private int opcionPausaSeleccionada = 0;
+    private int opcionConfirmacionSeleccionada = 1;
+
+    private Rectangle botonResume = new Rectangle();
+    private Rectangle botonBackToMenu = new Rectangle();
+    private Rectangle botonConfirmYes = new Rectangle();
+    private Rectangle botonConfirmNo = new Rectangle();
 
     public GamePanel(JFrame ventana) {
         this.ventana = ventana;
@@ -55,6 +72,7 @@ public class GamePanel extends JPanel {
         init();
         configurarTeclado();
         configurarMouse();
+        reproducirMusicaJuego();
         iniciarLoop();
     }
 
@@ -114,73 +132,77 @@ public class GamePanel extends JPanel {
         gameLoop.start();
     }
 
-    private void update(double delta) {
-        if (juegoTerminado) {
-            return;
-        }
+	private void update(double delta) {
+	    if (juegoTerminado || juegoPausado) {
+	        return;
+	    }
+	
+	    nave.update(delta);
+	    nave.limitarPantalla(getWidth());
+	
+	    ArrayList<Misil> nuevosMisiles = escuadron.update(delta, nivel, getWidth());
+	    misiles.addAll(nuevosMisiles);
+	
+	    for (int i = misiles.size() - 1; i >= 0; i--) {
+	        Misil misil = misiles.get(i);
+	        misil.update(delta);
+	
+	        if (!misil.estaActivo()) {
+	            if (misil.fueDetonado()) {
+	                procesarExplosion(misil);
+	            }
+	
+	            misiles.remove(i);
+	        }
+	    }
+	
+	    for (int i = explosiones.size() - 1; i >= 0; i--) {
+	        Explosion explosion = explosiones.get(i);
+	        explosion.update(delta);
+	
+	        if (!explosion.estaActivo()) {
+	            explosiones.remove(i);
+	        }
+	    }
+	
+	    Rectangle hitboxNave = nave.getHitbox();
+	
+	    for (int i = misiles.size() - 1; i >= 0; i--) {
+	        Misil misil = misiles.get(i);
+	
+	        if (misil.estaActivo() && hitboxNave.intersects(misil.getHitbox())) {
+	            nave.reducirEnergia(40);
+	            explosiones.add(new Explosion(
+	                misil.getPosicionX(),
+	                misil.getPosicionY(),
+	                "skydefense/res/sprite/transparent-Photoroom (3) - copia.png",
+	                "skydefense/res/sprite/transparent-Photoroom (3) - copia.json"
+	            ));
+	
+	            misiles.remove(i);
+	
+	            if (nave.energiaAgotada()) {
+	                jugador.perderVida();
+	                nave.restaurarEnergia();
+	            }
+	
+	            if (jugador.estaMuerto()) {
+	                terminarJuego(false);
+	            }
+	        }
+	    }
 
-        nave.update(delta);
-        nave.limitarPantalla(getWidth());
+    if (escuadron.nivelTerminado() && misiles.isEmpty() && explosiones.isEmpty()) {
+        jugador.sumarPuntos(300);
 
-        ArrayList<Misil> nuevosMisiles = escuadron.update(delta, nivel, getWidth());
-        misiles.addAll(nuevosMisiles);
-
-        for (int i = misiles.size() - 1; i >= 0; i--) {
-            Misil misil = misiles.get(i);
-            misil.update(delta);
-
-            if (!misil.estaActivo()) {
-                if (misil.fueDetonado()) {
-                    procesarExplosion(misil);
-                }
-
-                misiles.remove(i);
-            }
-        }
-
-        for (int i = explosiones.size() - 1; i >= 0; i--) {
-            Explosion explosion = explosiones.get(i);
-            explosion.update(delta);
-
-            if (!explosion.estaActivo()) {
-                explosiones.remove(i);
-            }
-        }
-        Rectangle hitboxNave = nave.getHitbox();
-
-        // 1. Colisiones con Misiles
-        for (int i = misiles.size() - 1; i >= 0; i--) {
-            Misil misil = misiles.get(i);
-            
-            // Verificamos si la caja del misil se superpone con la caja de la nave
-            if (misil.estaActivo() && hitboxNave.intersects(misil.getHitbox())) {
-                // Choque directo: Daño grave y destrucción del proyectil
-                nave.reducirEnergia(40); 
-                explosiones.add(new Explosion(misil.getPosicionX(), misil.getPosicionY(), "skydefense/res/sprite/transparent-Photoroom (3) - copia.png", "skydefense/res/sprite/transparent-Photoroom (3) - copia.json"));
-                misiles.remove(i);
-
-                // Evaluar estado del jugador tras el impacto directo
-                if (nave.energiaAgotada()) {
-                    jugador.perderVida();
-                    nave.restaurarEnergia();
-                }
-                if (jugador.estaMuerto()) {
-                    terminarJuego(false);
-                }
-            }
-        }
-
-        if (escuadron.nivelTerminado() && misiles.isEmpty() && explosiones.isEmpty()) {
-            jugador.sumarPuntos(300);
-
-            if (nivel.esUltimoNivel()) {
-                terminarJuego(true);
-            } else {
-                nivel.aplicarIncrementoDificultad();
-                escuadron = new Escuadron(spriteDron, spriteMisil);
-            }
+        if (nivel.esUltimoNivel()) {
+            terminarJuego(true);
+        } else {
+            nivel.aplicarIncrementoDificultad();
+            escuadron = new Escuadron(spriteDron, spriteMisil);
         }
     }
+}
 
     private void procesarExplosion(Misil misil) {
         double xExplosion = misil.getPosicionX();
@@ -219,6 +241,8 @@ public class GamePanel extends JPanel {
             gameLoop.stop();
         }
 
+        detenerMusicaJuego();
+
         guardarScoreSiCorresponde();
 
         repaint();
@@ -255,11 +279,126 @@ public class GamePanel extends JPanel {
             gameLoop.stop();
         }
 
+        detenerMusicaJuego();
+
         Menu menu = new Menu(false);
         ventana.setContentPane(menu);
         ventana.revalidate();
         ventana.repaint();
         menu.requestFocusInWindow();
+    }
+    
+    private void alternarPausa() {
+        if (juegoTerminado) {
+            return;
+        }
+
+        juegoPausado = !juegoPausado;
+        confirmandoVolverMenu = false;
+        opcionPausaSeleccionada = 0;
+        opcionConfirmacionSeleccionada = 1;
+
+        if (juegoPausado) {
+            pausarMusicaJuego();
+        } else {
+            reanudarMusicaJuego();
+        }
+
+        repaint();
+    }
+
+    private void reanudarJuego() {
+        juegoPausado = false;
+        confirmandoVolverMenu = false;
+        reanudarMusicaJuego();
+        repaint();
+    }
+
+    private void pedirConfirmacionVolverMenu() {
+        confirmandoVolverMenu = true;
+        opcionConfirmacionSeleccionada = 1;
+        repaint();
+    }
+
+    private void cancelarConfirmacionVolverMenu() {
+        confirmandoVolverMenu = false;
+        opcionPausaSeleccionada = 0;
+        repaint();
+    }
+
+    private void pausarMusicaJuego() {
+        if (musicaJuego != null && musicaJuego.isRunning()) {
+            musicaJuego.stop();
+        }
+    }
+
+    private void reanudarMusicaJuego() {
+        if (musicaJuego != null && !musicaJuego.isRunning()) {
+            musicaJuego.start();
+            musicaJuego.loop(Clip.LOOP_CONTINUOUSLY);
+        }
+    }
+    
+    private Clip cargarClip(String ruta) {
+        try {
+            AudioInputStream audio = AudioSystem.getAudioInputStream(new File(ruta));
+            Clip clip = AudioSystem.getClip();
+            clip.open(audio);
+            return clip;
+        } catch (Exception e) {
+            System.err.println("No se pudo cargar el audio: " + ruta);
+            return null;
+        }
+    }
+
+    private void reproducirMusicaJuego() {
+        detenerMusicaJuego();
+
+        musicaJuego = cargarClip("skydefense/res/sfx/musicaJuego.wav");
+
+        if (musicaJuego != null) {
+            setVolumen(musicaJuego, 1f);
+            musicaJuego.loop(Clip.LOOP_CONTINUOUSLY);
+        }
+    }
+
+    private void detenerMusicaJuego() {
+        if (musicaJuego != null) {
+            musicaJuego.stop();
+            musicaJuego.close();
+            musicaJuego = null;
+        }
+    }
+
+    private void setVolumen(Clip clip, float volumen) {
+        if (clip == null) {
+            return;
+        }
+
+        if (!clip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
+            return;
+        }
+
+        FloatControl control = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+
+        float min = control.getMinimum();
+        float max = control.getMaximum();
+
+        if (volumen <= 0f) {
+            volumen = 0.0001f;
+        }
+
+        float ganancia = (float) (20.0 * Math.log10(volumen));
+
+        if (ganancia < min) {
+            ganancia = min;
+        }
+
+        if (ganancia > max) {
+            ganancia = max;
+        }
+
+        control.setValue(ganancia);
     }
 
     private void configurarMouse() {
@@ -270,6 +409,31 @@ public class GamePanel extends JPanel {
 
                 if (juegoTerminado && botonVolverMenu.contains(e.getPoint())) {
                     volverAlMenu();
+                    return;
+                }
+
+                if (juegoPausado) {
+                    if (confirmandoVolverMenu) {
+                        if (botonConfirmYes.contains(e.getPoint())) {
+                            volverAlMenu();
+                            return;
+                        }
+
+                        if (botonConfirmNo.contains(e.getPoint())) {
+                            cancelarConfirmacionVolverMenu();
+                            return;
+                        }
+                    } else {
+                        if (botonResume.contains(e.getPoint())) {
+                            reanudarJuego();
+                            return;
+                        }
+
+                        if (botonBackToMenu.contains(e.getPoint())) {
+                            pedirConfirmacionVolverMenu();
+                            return;
+                        }
+                    }
                 }
             }
         });
@@ -281,8 +445,23 @@ public class GamePanel extends JPanel {
             public void keyPressed(KeyEvent e) {
                 int tecla = e.getKeyCode();
 
-                if (juegoTerminado && tecla == KeyEvent.VK_SPACE) {
+                if (juegoTerminado && (tecla == KeyEvent.VK_SPACE || tecla == KeyEvent.VK_ESCAPE)) {
                     volverAlMenu();
+                    return;
+                }
+
+                if (tecla == KeyEvent.VK_F11) {
+                    alternarPantallaCompleta();
+                    return;
+                }
+
+                if (tecla == KeyEvent.VK_ESCAPE || tecla == KeyEvent.VK_P) {
+                    alternarPausa();
+                    return;
+                }
+
+                if (juegoPausado) {
+                    manejarTecladoPausa(tecla);
                     return;
                 }
 
@@ -301,15 +480,15 @@ public class GamePanel extends JPanel {
                 if (tecla == KeyEvent.VK_DOWN || tecla == KeyEvent.VK_S) {
                     nave.setBajar(true);
                 }
-
-                if (tecla == KeyEvent.VK_F11) {
-                    alternarPantallaCompleta();
-                }
             }
 
             @Override
             public void keyReleased(KeyEvent e) {
                 int tecla = e.getKeyCode();
+
+                if (juegoPausado) {
+                    return;
+                }
 
                 if (tecla == KeyEvent.VK_LEFT || tecla == KeyEvent.VK_A) {
                     nave.setIzquierda(false);
@@ -328,6 +507,44 @@ public class GamePanel extends JPanel {
                 }
             }
         });
+    }
+    
+    private void manejarTecladoPausa(int tecla) {
+        if (confirmandoVolverMenu) {
+            if (tecla == KeyEvent.VK_UP || tecla == KeyEvent.VK_DOWN) {
+                opcionConfirmacionSeleccionada = opcionConfirmacionSeleccionada == 0 ? 1 : 0;
+                repaint();
+                return;
+            }
+
+            if (tecla == KeyEvent.VK_ENTER) {
+                if (opcionConfirmacionSeleccionada == 0) {
+                    volverAlMenu();
+                } else {
+                    cancelarConfirmacionVolverMenu();
+                }
+                return;
+            }
+
+            if (tecla == KeyEvent.VK_ESCAPE) {
+                cancelarConfirmacionVolverMenu();
+                return;
+            }
+        } else {
+            if (tecla == KeyEvent.VK_UP || tecla == KeyEvent.VK_DOWN) {
+                opcionPausaSeleccionada = opcionPausaSeleccionada == 0 ? 1 : 0;
+                repaint();
+                return;
+            }
+
+            if (tecla == KeyEvent.VK_ENTER) {
+                if (opcionPausaSeleccionada == 0) {
+                    reanudarJuego();
+                } else {
+                    pedirConfirmacionVolverMenu();
+                }
+            }
+        }
     }
 
     private void alternarPantallaCompleta() {
@@ -397,6 +614,10 @@ public class GamePanel extends JPanel {
         }
 
         dibujarHUD(g2d);
+
+        if (juegoPausado) {
+            dibujarMenuPausa(g2d);
+        }
     }
 
     private void dibujarFondo(Graphics2D g2d) {
@@ -418,6 +639,107 @@ public class GamePanel extends JPanel {
         g2d.drawString("ENERGY: " + nave.getEnergia(), 20, 80);
         g2d.drawString("DRONES REMAINING: " + escuadron.getDronesRestantes(), 20, 105);
         g2d.drawString("LEVEL: " + nivel.getNumero(), 20, 130);
+    }
+    
+    private void dibujarMenuPausa(Graphics2D g2d) {
+        g2d.setColor(new Color(0, 0, 0, 190));
+        g2d.fillRect(0, 0, getWidth(), getHeight());
+
+        if (confirmandoVolverMenu) {
+            dibujarConfirmacionVolverMenu(g2d);
+            return;
+        }
+
+        int boxW = 470;
+        int boxH = 260;
+        int boxX = (getWidth() - boxW) / 2;
+        int boxY = (getHeight() - boxH) / 2;
+
+        g2d.setColor(new Color(20, 20, 20));
+        g2d.fillRoundRect(boxX, boxY, boxW, boxH, 25, 25);
+
+        g2d.setColor(Color.ORANGE);
+        g2d.setStroke(new BasicStroke(3));
+        g2d.drawRoundRect(boxX, boxY, boxW, boxH, 25, 25);
+
+        g2d.setFont(new Font("Arial", Font.BOLD, 42));
+        g2d.setColor(Color.ORANGE);
+
+        String titulo = "PAUSED";
+        int tituloX = boxX + (boxW - g2d.getFontMetrics().stringWidth(titulo)) / 2;
+        g2d.drawString(titulo, tituloX, boxY + 65);
+
+        botonResume.setBounds(boxX + 85, boxY + 105, 300, 50);
+        botonBackToMenu.setBounds(boxX + 85, boxY + 170, 300, 50);
+
+        dibujarBotonPausa(g2d, botonResume, "RESUME", opcionPausaSeleccionada == 0);
+        dibujarBotonPausa(g2d, botonBackToMenu, "BACK TO MENU", opcionPausaSeleccionada == 1);
+    }
+
+    private void dibujarConfirmacionVolverMenu(Graphics2D g2d) {
+        int boxW = 560;
+        int boxH = 300;
+        int boxX = (getWidth() - boxW) / 2;
+        int boxY = (getHeight() - boxH) / 2;
+
+        g2d.setColor(new Color(20, 20, 20));
+        g2d.fillRoundRect(boxX, boxY, boxW, boxH, 25, 25);
+
+        g2d.setColor(Color.ORANGE);
+        g2d.setStroke(new BasicStroke(3));
+        g2d.drawRoundRect(boxX, boxY, boxW, boxH, 25, 25);
+
+        g2d.setFont(new Font("Arial", Font.BOLD, 36));
+        g2d.setColor(Color.ORANGE);
+
+        String titulo = "WARNING";
+        int tituloX = boxX + (boxW - g2d.getFontMetrics().stringWidth(titulo)) / 2;
+        g2d.drawString(titulo, tituloX, boxY + 60);
+
+        g2d.setFont(new Font("Arial", Font.BOLD, 22));
+        g2d.setColor(Color.WHITE);
+
+        String linea1 = "Current progress will be lost.";
+        String linea2 = "Return to menu?";
+
+        int linea1X = boxX + (boxW - g2d.getFontMetrics().stringWidth(linea1)) / 2;
+        int linea2X = boxX + (boxW - g2d.getFontMetrics().stringWidth(linea2)) / 2;
+
+        g2d.drawString(linea1, linea1X, boxY + 110);
+        g2d.drawString(linea2, linea2X, boxY + 145);
+
+        botonConfirmYes.setBounds(boxX + 130, boxY + 200, 120, 50);
+        botonConfirmNo.setBounds(boxX + 310, boxY + 200, 120, 50);
+
+        dibujarBotonPausa(g2d, botonConfirmYes, "YES", opcionConfirmacionSeleccionada == 0);
+        dibujarBotonPausa(g2d, botonConfirmNo, "NO", opcionConfirmacionSeleccionada == 1);
+    }
+
+    private void dibujarBotonPausa(Graphics2D g2d, Rectangle boton, String texto, boolean seleccionado) {
+        if (seleccionado) {
+            g2d.setColor(Color.ORANGE);
+        } else {
+            g2d.setColor(new Color(35, 35, 35));
+        }
+
+        g2d.fillRoundRect(boton.x, boton.y, boton.width, boton.height, 18, 18);
+
+        g2d.setColor(Color.WHITE);
+        g2d.setStroke(new BasicStroke(2));
+        g2d.drawRoundRect(boton.x, boton.y, boton.width, boton.height, 18, 18);
+
+        g2d.setFont(new Font("Arial", Font.BOLD, 22));
+
+        if (seleccionado) {
+            g2d.setColor(Color.BLACK);
+        } else {
+            g2d.setColor(Color.WHITE);
+        }
+
+        int textoX = boton.x + (boton.width - g2d.getFontMetrics().stringWidth(texto)) / 2;
+        int textoY = boton.y + 33;
+
+        g2d.drawString(texto, textoX, textoY);
     }
 
     private void dibujarFinJuego(Graphics2D g2d) {
