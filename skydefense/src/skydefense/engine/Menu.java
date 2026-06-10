@@ -44,6 +44,7 @@ public class Menu extends JPanel {
     private Clip musicaPresentacion;
     private Clip musicaLogo;
     private Clip musicaJuego;
+    private Clip musicaLogoProgramadores;
 
     private float alphaPresentacion = 1f;
     private boolean cambiandoDiapositiva = false;
@@ -127,7 +128,7 @@ public class Menu extends JPanel {
             System.err.println("No se pudo cargar la imagen del logo. Verificá la ruta y el nombre.");
         }
 
-       try {
+        try {
             gifAmigos = new ImageIcon("skydefense/res/sprite/betterLogo.gif").getImage();
         } catch (Exception e) {
             System.err.println("No se pudo cargar el GIF de la intro betterLogo.");
@@ -352,6 +353,8 @@ public class Menu extends JPanel {
         estadoPantalla = EstadoPantalla.LOGO_PROGRAMADORES;
         alphaLogoProgramadores = 0f;
 
+        reproducirMusicaLogoProgramadores();
+
         Timer timerLogoProgramadores = new Timer(50, e -> {
             alphaLogoProgramadores += 0.03f;
 
@@ -361,6 +364,7 @@ public class Menu extends JPanel {
 
                 Timer espera = new Timer(4500, ev -> {
                     ((Timer) ev.getSource()).stop();
+                    detenerMusicaLogoProgramadores();
                     estadoPantalla = EstadoPantalla.MENU;
                     reproducirMusicaLogo();
                     repaint();
@@ -474,6 +478,7 @@ public class Menu extends JPanel {
         detenerMusicaPresentacion();
         detenerMusicaLogo();
         detenerMusicaJuego();
+        detenerMusicaLogoProgramadores();
 
         JFrame ventana = (JFrame) SwingUtilities.getWindowAncestor(this);
 
@@ -564,6 +569,17 @@ public class Menu extends JPanel {
         }
     }
 
+    private void reproducirMusicaLogoProgramadores() {
+        detenerMusicaLogoProgramadores();
+
+        musicaLogoProgramadores = cargarClip("skydefense/res/sfx/musicaLogoProgramadores.wav");
+
+        if (musicaLogoProgramadores != null) {
+            setVolumen(musicaLogoProgramadores, 1f);
+            musicaLogoProgramadores.loop(Clip.LOOP_CONTINUOUSLY);
+        }
+    }
+
     private void reproducirMusicaJuego() {
         detenerMusicaJuego();
 
@@ -619,6 +635,14 @@ public class Menu extends JPanel {
             musicaLogo.stop();
             musicaLogo.close();
             musicaLogo = null;
+        }
+    }
+
+    private void detenerMusicaLogoProgramadores() {
+        if (musicaLogoProgramadores != null) {
+            musicaLogoProgramadores.stop();
+            musicaLogoProgramadores.close();
+            musicaLogoProgramadores = null;
         }
     }
 
@@ -779,7 +803,6 @@ public class Menu extends JPanel {
         g2d.drawString(volver, volverX, getHeight() - 60);
     }
 
-
     private void dibujarConfirmacionExit(Graphics2D g2d) {
         g2d.setColor(new Color(0, 0, 0, 190));
         g2d.fillRect(0, 0, getWidth(), getHeight());
@@ -829,15 +852,51 @@ public class Menu extends JPanel {
         g2d.fillRect(0, 0, getWidth(), getHeight());
 
         if (gifAmigos != null) {
-        
-            int anchoIntro = 450; 
+            int anchoIntro = 450;
             int altoIntro = 350;
 
             int x = (getWidth() - anchoIntro) / 2;
             int y = (getHeight() - altoIntro) / 2;
 
-            
             g2d.drawImage(gifAmigos, x, y, anchoIntro, altoIntro, this);
+
+            int margenFade = 85;
+
+            GradientPaint fadeIzquierdo = new GradientPaint(
+                x, y,
+                new Color(0, 0, 0, 255),
+                x + margenFade, y,
+                new Color(0, 0, 0, 0)
+            );
+            g2d.setPaint(fadeIzquierdo);
+            g2d.fillRect(x, y, margenFade, altoIntro);
+
+            GradientPaint fadeDerecho = new GradientPaint(
+                x + anchoIntro - margenFade, y,
+                new Color(0, 0, 0, 0),
+                x + anchoIntro, y,
+                new Color(0, 0, 0, 255)
+            );
+            g2d.setPaint(fadeDerecho);
+            g2d.fillRect(x + anchoIntro - margenFade, y, margenFade, altoIntro);
+
+            GradientPaint fadeSuperior = new GradientPaint(
+                x, y,
+                new Color(0, 0, 0, 255),
+                x, y + margenFade,
+                new Color(0, 0, 0, 0)
+            );
+            g2d.setPaint(fadeSuperior);
+            g2d.fillRect(x, y, anchoIntro, margenFade);
+
+            GradientPaint fadeInferior = new GradientPaint(
+                x, y + altoIntro - margenFade,
+                new Color(0, 0, 0, 0),
+                x, y + altoIntro,
+                new Color(0, 0, 0, 255)
+            );
+            g2d.setPaint(fadeInferior);
+            g2d.fillRect(x, y + altoIntro - margenFade, anchoIntro, margenFade);
         }
     }
 
