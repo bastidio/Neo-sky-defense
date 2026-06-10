@@ -7,6 +7,7 @@ import skydefense.model.Leaderboard;
 import skydefense.model.Misil;
 import skydefense.model.Nave;
 import skydefense.model.Nivel;
+import skydefense.engine.ConfigJuego;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -19,6 +20,7 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
+
 
 public class GamePanel extends JPanel {
 
@@ -38,6 +40,8 @@ public class GamePanel extends JPanel {
     private BufferedImage logo;
     
     private Clip musicaJuego;
+    private Clip sonidoVidaExtra;
+    private Clip sonidoGameOver;
 
     private Timer gameLoop;
     private long ultimoTiempo;
@@ -193,7 +197,9 @@ public class GamePanel extends JPanel {
 	    }
 
     if (escuadron.nivelTerminado() && misiles.isEmpty() && explosiones.isEmpty()) {
-        jugador.sumarPuntos(300);
+    	if (jugador.sumarPuntos(300)) {
+    	    reproducirSonidoVidaExtra();
+    	}
 
         if (nivel.esUltimoNivel()) {
             terminarJuego(true);
@@ -213,9 +219,13 @@ public class GamePanel extends JPanel {
         double distancia = misil.calcularDistancia(nave.getPosicionX(), nave.getAltitud());
 
         if (distancia > 150) {
-            jugador.sumarPuntos(40);
+        	if (jugador.sumarPuntos(40)) {
+        	    reproducirSonidoVidaExtra();
+        	}
         } else if (distancia >= 80 && distancia <= 150) {
-            jugador.sumarPuntos(20);
+        	if (jugador.sumarPuntos(20)) {
+        	    reproducirSonidoVidaExtra();
+        	}
             nave.reducirEnergia(20);
         } else if (distancia >= 20 && distancia < 80) {
             nave.reducirEnergia(40);
@@ -242,6 +252,10 @@ public class GamePanel extends JPanel {
         }
 
         detenerMusicaJuego();
+        
+        if (!victoria) {
+            reproducirSonidoGameOver();
+        }
 
         guardarScoreSiCorresponde();
 
@@ -350,8 +364,63 @@ public class GamePanel extends JPanel {
             return null;
         }
     }
+    
+    private void reproducirSonidoVidaExtra() {
+
+        if (!ConfigJuego.sfxActivo) {
+            return;
+        }
+
+        try {
+
+            if (sonidoVidaExtra != null) {
+                sonidoVidaExtra.stop();
+                sonidoVidaExtra.close();
+            }
+
+            sonidoVidaExtra =
+                cargarClip("skydefense/res/sfx/ganarVida.wav");
+
+            if (sonidoVidaExtra != null) {
+                sonidoVidaExtra.start();
+            }
+
+        } catch (Exception e) {
+            System.err.println("No se pudo reproducir ganarVida.wav");
+        }
+    }
+    
+    private void reproducirSonidoGameOver() {
+
+        if (!ConfigJuego.sfxActivo) {
+            return;
+        }
+
+        try {
+
+            if (sonidoGameOver != null) {
+                sonidoGameOver.stop();
+                sonidoGameOver.close();
+            }
+
+            sonidoGameOver =
+                cargarClip("skydefense/res/sfx/juegoPerdido.wav");
+
+            if (sonidoGameOver != null) {
+                sonidoGameOver.start();
+            }
+
+        } catch (Exception e) {
+            System.err.println("No se pudo reproducir juegoPerdido.wav");
+        }
+    }
 
     private void reproducirMusicaJuego() {
+
+        if (!ConfigJuego.musicaActiva) {
+            return;
+        }
+
         detenerMusicaJuego();
 
         musicaJuego = cargarClip("skydefense/res/sfx/musicaJuego.wav");

@@ -12,16 +12,21 @@ public class Jugador {
         this.proximaVidaExtra = 1000;
     }
 
-    public void sumarPuntos(int cantidad) {
+    public boolean sumarPuntos(int cantidad) {
         puntos += cantidad;
-        verificarVidaExtra();
+        return verificarVidaExtra();
     }
 
-    private void verificarVidaExtra() {
+    private boolean verificarVidaExtra() {
+        boolean ganoVida = false;
+
         while (puntos >= proximaVidaExtra) {
             agregarVida();
             proximaVidaExtra += 1000;
+            ganoVida = true;
         }
+
+        return ganoVida;
     }
 
     public void perderVida() {

@@ -45,6 +45,7 @@ public class Menu extends JPanel {
     private Clip musicaLogo;
     private Clip musicaJuego;
     private Clip musicaLogoProgramadores;
+    private Clip sonidoDisparo;
 
     private float alphaPresentacion = 1f;
     private boolean cambiandoDiapositiva = false;
@@ -55,6 +56,12 @@ public class Menu extends JPanel {
     private boolean pantallaCompleta = false;
     private Rectangle boundsVentana;
 
+    private int opcionOptionsSeleccionada = 0;
+    private Rectangle botonMusic = new Rectangle();
+    private Rectangle botonSfx = new Rectangle();
+    private Rectangle botonFullscreen = new Rectangle();
+    private Rectangle botonBackOptions = new Rectangle();
+
     private Rectangle botonYes = new Rectangle();
     private Rectangle botonNo = new Rectangle();
 
@@ -62,6 +69,7 @@ public class Menu extends JPanel {
         LOGO_PROGRAMADORES,
         MENU,
         SCORES,
+        OPTIONS,
         PRESENTACION,
         TITULO_FINAL,
         JUEGO
@@ -215,13 +223,29 @@ public class Menu extends JPanel {
                     return;
                 }
 
+                if (estadoPantalla == EstadoPantalla.OPTIONS) {
+                    if (botonMusic.contains(e.getPoint())) {
+                        alternarMusica();
+                    } else if (botonSfx.contains(e.getPoint())) {
+                        alternarSfx();
+                    } else if (botonFullscreen.contains(e.getPoint())) {
+                        alternarPantallaCompleta();
+                    } else if (botonBackOptions.contains(e.getPoint())) {
+                        estadoPantalla = EstadoPantalla.MENU;
+                    }
+
+                    repaint();
+                    return;
+                }
+
                 if (estadoPantalla == EstadoPantalla.MENU && hoveredIndex == 0) {
                     ejecutarPlay();
                 } else if (estadoPantalla == EstadoPantalla.MENU && hoveredIndex == 1) {
                     estadoPantalla = EstadoPantalla.SCORES;
                     repaint();
                 } else if (estadoPantalla == EstadoPantalla.MENU && hoveredIndex == 2) {
-                    alternarPantallaCompleta();
+                    estadoPantalla = EstadoPantalla.OPTIONS;
+                    repaint();
                 } else if (estadoPantalla == EstadoPantalla.MENU && hoveredIndex == 3) {
                     mostrarConfirmacionExit();
                 } else if (estadoPantalla == EstadoPantalla.MENU) {
@@ -254,6 +278,35 @@ public class Menu extends JPanel {
                         e.getKeyCode() == KeyEvent.VK_ENTER) {
                         estadoPantalla = EstadoPantalla.MENU;
                         repaint();
+                    }
+
+                    return;
+                }
+
+                if (estadoPantalla == EstadoPantalla.OPTIONS) {
+                    if (e.getKeyCode() == KeyEvent.VK_UP) {
+                        opcionOptionsSeleccionada--;
+
+                        if (opcionOptionsSeleccionada < 0) {
+                            opcionOptionsSeleccionada = 3;
+                        }
+
+                        repaint();
+                    } else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+                        opcionOptionsSeleccionada++;
+
+                        if (opcionOptionsSeleccionada > 3) {
+                            opcionOptionsSeleccionada = 0;
+                        }
+
+                        repaint();
+                    } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        ejecutarOpcionOptions();
+                    } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                        estadoPantalla = EstadoPantalla.MENU;
+                        repaint();
+                    } else if (e.getKeyCode() == KeyEvent.VK_F11) {
+                        alternarPantallaCompleta();
                     }
 
                     return;
@@ -333,10 +386,44 @@ public class Menu extends JPanel {
             estadoPantalla = EstadoPantalla.SCORES;
             repaint();
         } else if (hoveredIndex == 2) {
-            alternarPantallaCompleta();
+            estadoPantalla = EstadoPantalla.OPTIONS;
+            repaint();
         } else if (hoveredIndex == 3) {
             mostrarConfirmacionExit();
         }
+    }
+
+    private void ejecutarOpcionOptions() {
+        if (opcionOptionsSeleccionada == 0) {
+            alternarMusica();
+        } else if (opcionOptionsSeleccionada == 1) {
+            alternarSfx();
+        } else if (opcionOptionsSeleccionada == 2) {
+            alternarPantallaCompleta();
+        } else if (opcionOptionsSeleccionada == 3) {
+            estadoPantalla = EstadoPantalla.MENU;
+        }
+
+        repaint();
+    }
+
+    private void alternarMusica() {
+        ConfigJuego.musicaActiva = !ConfigJuego.musicaActiva;
+
+        if (!ConfigJuego.musicaActiva) {
+            detenerMusicaLogo();
+            detenerMusicaPresentacion();
+            detenerMusicaLogoProgramadores();
+            detenerMusicaJuego();
+        } else {
+            if (estadoPantalla == EstadoPantalla.MENU || estadoPantalla == EstadoPantalla.OPTIONS) {
+                reproducirMusicaLogo();
+            }
+        }
+    }
+
+    private void alternarSfx() {
+        ConfigJuego.sfxActivo = !ConfigJuego.sfxActivo;
     }
 
     private void ejecutarPlay() {
@@ -546,7 +633,36 @@ public class Menu extends JPanel {
         }
     }
 
+    private void reproducirSonidoDisparo() {
+        if (!ConfigJuego.sfxActivo) {
+            return;
+        }
+
+        try {
+            if (sonidoDisparo != null) {
+                sonidoDisparo.stop();
+                sonidoDisparo.close();
+            }
+
+            AudioInputStream audio =
+                AudioSystem.getAudioInputStream(
+                    new File("skydefense/res/sfx/disparos.wav")
+                );
+
+            sonidoDisparo = AudioSystem.getClip();
+            sonidoDisparo.open(audio);
+            sonidoDisparo.start();
+
+        } catch (Exception e) {
+            System.err.println("No se pudo reproducir disparos.wav");
+        }
+    }
+
     private void reproducirMusicaPresentacion() {
+        if (!ConfigJuego.musicaActiva) {
+            return;
+        }
+
         detenerMusicaPresentacion();
 
         musicaPresentacion = cargarClip("skydefense/res/sfx/introPresentacion.wav");
@@ -558,6 +674,10 @@ public class Menu extends JPanel {
     }
 
     private void reproducirMusicaLogo() {
+        if (!ConfigJuego.musicaActiva) {
+            return;
+        }
+
         detenerMusicaLogo();
 
         musicaLogo = cargarClip("skydefense/res/sfx/musicaLogo.wav");
@@ -569,6 +689,10 @@ public class Menu extends JPanel {
     }
 
     private void reproducirMusicaLogoProgramadores() {
+        if (!ConfigJuego.musicaActiva) {
+            return;
+        }
+
         detenerMusicaLogoProgramadores();
 
         musicaLogoProgramadores = cargarClip("skydefense/res/sfx/musicaLogoProgramadores.wav");
@@ -580,6 +704,10 @@ public class Menu extends JPanel {
     }
 
     private void reproducirMusicaJuego() {
+        if (!ConfigJuego.musicaActiva) {
+            return;
+        }
+
         detenerMusicaJuego();
 
         musicaJuego = cargarClip("skydefense/res/sfx/musicaJuego.wav");
@@ -653,18 +781,44 @@ public class Menu extends JPanel {
         }
     }
 
+    private int getAnchoNaveMenu() {
+        return Math.max(180, getWidth() / 6);
+    }
+
+    private int getAltoNaveMenu() {
+        return getAnchoNaveMenu();
+    }
+
+    private int getNaveXMenu() {
+        int anchoNave = getAnchoNaveMenu();
+        return getWidth() - anchoNave - (getWidth() / 6);
+    }
+    private int getNaveYMenu() {
+        int altoNave = getAltoNaveMenu();
+
+        // Ventana normal
+        if (getWidth() <= 900) {
+            return getHeight() / 2 - altoNave / 2 + 35;
+        }
+
+        // Fullscreen
+        return getHeight() / 2 - altoNave / 2 + 70;
+    }
+    
     private void disparar() {
-        int anchoNave = 180;
-        int altoNave = 180;
-        int naveX = 500;
-        int naveY = 250;
+        reproducirSonidoDisparo();
+
+        int anchoNave = getAnchoNaveMenu();
+        int altoNave = getAltoNaveMenu();
+        int naveX = getNaveXMenu();
+        int naveY = getNaveYMenu();
 
         double centroX = naveX + anchoNave / 2.0;
         double centroY = naveY + altoNave / 2.0;
 
         double angulo = Math.atan2(mouseY - centroY, mouseX - centroX);
 
-        double puntaX = centroX + Math.cos(angulo) * (altoNave / 2.0);
+        double puntaX = centroX + Math.cos(angulo) * (anchoNave / 2.0);
         double puntaY = centroY + Math.sin(angulo) * (altoNave / 2.0);
 
         disparos.add(new Disparo(puntaX, puntaY, angulo));
@@ -686,6 +840,11 @@ public class Menu extends JPanel {
             return;
         }
 
+        if (estadoPantalla == EstadoPantalla.OPTIONS) {
+            dibujarOptions(g2d);
+            return;
+        }
+
         if (estadoPantalla == EstadoPantalla.PRESENTACION) {
             dibujarPresentacion(g2d);
             return;
@@ -700,12 +859,25 @@ public class Menu extends JPanel {
     }
 
     private void dibujarMenu(Graphics2D g2d) {
+        int anchoPantalla = getWidth();
+        int altoPantalla = getHeight();
+
+        int menuX = anchoPantalla / 8;
+        int primerY = altoPantalla / 3;
+        int separacionY = altoPantalla / 9;
+
+        for (int i = 0; i < opciones.length; i++) {
+            posicionesY[i] = primerY + (i * separacionY);
+            hitboxes[i].x = menuX;
+            hitboxes[i].y = posicionesY[i] - 45;
+        }
+
         if (logo != null) {
-            int altoLogo = 150;
+            int altoLogo = Math.max(140, altoPantalla / 4);
             int anchoLogo = (int) ((double) logo.getWidth() / logo.getHeight() * altoLogo);
 
-            int logoX = 450;
-            int logoY = 5;
+            int logoX = anchoPantalla - anchoLogo - (anchoPantalla / 10);
+            int logoY = altoPantalla / 12;
 
             g2d.drawImage(logo, logoX, logoY, anchoLogo, altoLogo, null);
         }
@@ -714,29 +886,37 @@ public class Menu extends JPanel {
             String texto = opciones[i];
 
             if (i == hoveredIndex) {
-                g2d.setFont(fuenteHover);
+            	if (pantallaCompleta) {
+            	    g2d.setFont(fuenteHover.deriveFont(65f));
+            	} else {
+            	    g2d.setFont(fuenteHover);
+            	}
                 g2d.setColor(Color.ORANGE);
 
                 FontMetrics fmHover = g2d.getFontMetrics();
                 int anchoNormal = hitboxes[i].width;
                 int anchoHover = fmHover.stringWidth(texto);
-                int xAjustado = posicionXBase - ((anchoHover - anchoNormal) / 2);
+                int xAjustado = menuX - ((anchoHover - anchoNormal) / 2);
 
                 g2d.drawString(texto, xAjustado, posicionesY[i]);
             } else {
-                g2d.setFont(fuenteNormal);
+            	if (pantallaCompleta) {
+            	    g2d.setFont(fuenteNormal.deriveFont(55f));
+            	} else {
+            	    g2d.setFont(fuenteNormal);
+            	}
 
                 Color blancoResplandor = new Color(255, 255, 255, 60);
                 g2d.setColor(blancoResplandor);
 
                 int desfase = 2;
-                g2d.drawString(texto, posicionXBase - desfase, posicionesY[i] - desfase);
-                g2d.drawString(texto, posicionXBase + desfase, posicionesY[i] + desfase);
-                g2d.drawString(texto, posicionXBase - desfase, posicionesY[i] + desfase);
-                g2d.drawString(texto, posicionXBase + desfase, posicionesY[i] - desfase);
+                g2d.drawString(texto, menuX - desfase, posicionesY[i] - desfase);
+                g2d.drawString(texto, menuX + desfase, posicionesY[i] + desfase);
+                g2d.drawString(texto, menuX - desfase, posicionesY[i] + desfase);
+                g2d.drawString(texto, menuX + desfase, posicionesY[i] - desfase);
 
                 g2d.setColor(Color.WHITE);
-                g2d.drawString(texto, posicionXBase, posicionesY[i]);
+                g2d.drawString(texto, menuX, posicionesY[i]);
             }
         }
 
@@ -745,10 +925,11 @@ public class Menu extends JPanel {
         }
 
         if (spriteNave != null) {
-            int anchoNave = 180;
-            int altoNave = 180;
-            int naveX = 500;
-            int naveY = 250;
+            int anchoNave = getAnchoNaveMenu();
+            int altoNave = getAltoNaveMenu();
+
+            int naveX = getNaveXMenu();
+            int naveY = getNaveYMenu();
 
             int centroX = naveX + anchoNave / 2;
             int centroY = naveY + altoNave / 2;
@@ -767,6 +948,61 @@ public class Menu extends JPanel {
         if (mostrandoConfirmacionExit) {
             dibujarConfirmacionExit(g2d);
         }
+    }
+
+    private void dibujarOptions(Graphics2D g2d) {
+        g2d.setColor(Color.BLACK);
+        g2d.fillRect(0, 0, getWidth(), getHeight());
+
+        g2d.setFont(fuenteTitulo.deriveFont(52f));
+        g2d.setColor(Color.ORANGE);
+
+        String titulo = "OPTIONS";
+        int tituloX = (getWidth() - g2d.getFontMetrics().stringWidth(titulo)) / 2;
+        g2d.drawString(titulo, tituloX, getHeight() / 6);
+
+        int anchoBoton = 420;
+        int altoBoton = 55;
+        int x = (getWidth() - anchoBoton) / 2;
+        int y = getHeight() / 4;
+        int separacion = 75;
+
+        botonMusic.setBounds(x, y, anchoBoton, altoBoton);
+        botonSfx.setBounds(x, y + separacion, anchoBoton, altoBoton);
+        botonFullscreen.setBounds(x, y + separacion * 2, anchoBoton, altoBoton);
+        botonBackOptions.setBounds(x, y + separacion * 3, anchoBoton, altoBoton);
+
+        dibujarBotonOptions(g2d, botonMusic, "MUSIC: " + (ConfigJuego.musicaActiva ? "ON" : "OFF"), opcionOptionsSeleccionada == 0);
+        dibujarBotonOptions(g2d, botonSfx, "SFX: " + (ConfigJuego.sfxActivo ? "ON" : "OFF"), opcionOptionsSeleccionada == 1);
+        dibujarBotonOptions(g2d, botonFullscreen, pantallaCompleta ? "WINDOWED" : "FULLSCREEN", opcionOptionsSeleccionada == 2);
+        dibujarBotonOptions(g2d, botonBackOptions, "BACK", opcionOptionsSeleccionada == 3);
+    }
+
+    private void dibujarBotonOptions(Graphics2D g2d, Rectangle boton, String texto, boolean seleccionado) {
+        if (seleccionado) {
+            g2d.setColor(Color.ORANGE);
+        } else {
+            g2d.setColor(new Color(25, 25, 25));
+        }
+
+        g2d.fillRoundRect(boton.x, boton.y, boton.width, boton.height, 20, 20);
+
+        g2d.setColor(Color.WHITE);
+        g2d.setStroke(new BasicStroke(2));
+        g2d.drawRoundRect(boton.x, boton.y, boton.width, boton.height, 20, 20);
+
+        g2d.setFont(fuenteNormal.deriveFont(24f));
+
+        if (seleccionado) {
+            g2d.setColor(Color.BLACK);
+        } else {
+            g2d.setColor(Color.WHITE);
+        }
+
+        int textoX = boton.x + (boton.width - g2d.getFontMetrics().stringWidth(texto)) / 2;
+        int textoY = boton.y + 37;
+
+        g2d.drawString(texto, textoX, textoY);
     }
 
     private void dibujarScores(Graphics2D g2d) {
