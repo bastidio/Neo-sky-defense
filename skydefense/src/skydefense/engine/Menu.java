@@ -781,17 +781,17 @@ public class Menu extends JPanel {
         int tituloX = (getWidth() - g2d.getFontMetrics().stringWidth(titulo)) / 2;
         g2d.drawString(titulo, tituloX, 90);
 
-        g2d.setFont(fuenteNormal.deriveFont(28f));
+        g2d.setFont(fuenteNormal.deriveFont(26f));
         g2d.setColor(Color.WHITE);
 
-        int y = 155;
+        int y = 145;
         int pos = 1;
 
         for (Leaderboard.ScoreEntry score : Leaderboard.getInstancia().getScores()) {
             String linea = pos + ". " + score.name + "   " + score.score;
             int lineaX = (getWidth() - g2d.getFontMetrics().stringWidth(linea)) / 2;
             g2d.drawString(linea, lineaX, y);
-            y += 42;
+            y += 38;
             pos++;
         }
 
@@ -800,7 +800,7 @@ public class Menu extends JPanel {
 
         String volver = "PRESS SPACE / ENTER / ESC OR CLICK TO RETURN";
         int volverX = (getWidth() - g2d.getFontMetrics().stringWidth(volver)) / 2;
-        g2d.drawString(volver, volverX, getHeight() - 60);
+        g2d.drawString(volver, volverX, getHeight() - 25);
     }
 
     private void dibujarConfirmacionExit(Graphics2D g2d) {
