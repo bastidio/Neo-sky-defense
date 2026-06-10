@@ -623,11 +623,6 @@ public class GamePanel extends JPanel {
     private void dibujarFondo(Graphics2D g2d) {
         g2d.setColor(Color.BLACK);
         g2d.fillRect(0, 0, getWidth(), getHeight());
-
-        g2d.setColor(new Color(20, 20, 35));
-        for (int i = 0; i < getHeight(); i += 40) {
-            g2d.drawLine(0, i, getWidth(), i);
-        }
     }
 
     private void dibujarHUD(Graphics2D g2d) {
