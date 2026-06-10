@@ -4,6 +4,7 @@ import skydefense.engine.Menu;
 import javax.swing.*;
 import javax.swing.*;
 import javax.swing.*;
+import java.awt.Image;
 
 public class Main {
     public static void main(String[] args) {
@@ -14,6 +15,9 @@ public class Main {
             ventana.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             ventana.setLocationRelativeTo(null); 
             ventana.setResizable(false); 
+
+            Image iconoVentana = new ImageIcon("skydefense/res/sprite/nave.png").getImage();
+            ventana.setIconImage(iconoVentana);
 
             // Instanciamos el panel del menú (que ahora es un JPanel)
             Menu panelMenu = new Menu();
