@@ -1,0 +1,10 @@
+{
+  "puntajes": [
+    { "nombre": "BRU", "puntaje": 9340 },
+    { "nombre": "PPP", "puntaje": 8820 },
+    { "nombre": "FEL", "puntaje": 8660 },
+    { "nombre": "JOC", "puntaje": 4590 },
+    { "nombre": "FTG", "puntaje": 2420 },
+    { "nombre": "ALE", "puntaje": 800 }
+  ]
+}
