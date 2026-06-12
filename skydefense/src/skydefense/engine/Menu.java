@@ -13,7 +13,7 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
-import skydefense.model.Leaderboard;
+import skydefense.model.Puntuaciones;
 
 public class Menu extends JPanel {
 
@@ -569,11 +569,11 @@ public class Menu extends JPanel {
         JFrame ventana = (JFrame) SwingUtilities.getWindowAncestor(this);
 
         if (ventana != null) {
-            GamePanel gamePanel = new GamePanel(ventana);
-            ventana.setContentPane(gamePanel);
-            ventana.revalidate();
-            ventana.repaint();
-            gamePanel.requestFocusInWindow();
+        	PanelJuego panelJuego = new PanelJuego(ventana);
+        	ventana.setContentPane(panelJuego);
+        	ventana.revalidate();
+        	ventana.repaint();
+        	panelJuego.requestFocusInWindow();
         }
 
         System.out.println("Iniciando juego.");
@@ -1022,7 +1022,7 @@ public class Menu extends JPanel {
         int y = 145;
         int pos = 1;
 
-        for (Leaderboard.ScoreEntry score : Leaderboard.getInstancia().getScores()) {
+        for (Puntuaciones.Puntaje score : Puntuaciones.getInstancia().getPuntajes()) {
             String linea = pos + ". " + score.name + "   " + score.score;
             int lineaX = (getWidth() - g2d.getFontMetrics().stringWidth(linea)) / 2;
             g2d.drawString(linea, lineaX, y);

@@ -1,9 +1,8 @@
 package skydefense.model;
 
 import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
 import java.awt.Rectangle;
-
+import java.awt.image.BufferedImage;
 
 public class Nave extends ObjetoVolador {
 
@@ -19,12 +18,18 @@ public class Nave extends ObjetoVolador {
     private double velocidadMovimiento = 280;
     private double tiempoCambioAltitud = 0;
 
+    private RenderizadorNave renderer;
+
+    private final int ancho = 90;
+    private final int alto = 90;
+
     public Nave(BufferedImage sprite, int anchoPantalla, int altoPantalla) {
         this.sprite = sprite;
         this.posicionX = anchoPantalla / 2.0;
         this.posicionY = altoPantalla / 2.0 + 80;
         this.altitud = 3000;
         this.energia = 100;
+        this.renderer = new RenderizadorNave();
     }
 
     @Override
@@ -85,10 +90,14 @@ public class Nave extends ObjetoVolador {
     public int getAltitud() {
         return altitud;
     }
+
     public Rectangle getHitbox() {
-        int ancho = 90;
-        int alto = 90;
-        return new Rectangle((int) posicionX - ancho / 2, (int) posicionY - alto / 2, ancho, alto);
+        return new Rectangle(
+            (int) posicionX - ancho / 2,
+            (int) posicionY - alto / 2,
+            ancho,
+            alto
+        );
     }
 
     public void setIzquierda(boolean izquierda) {
@@ -109,13 +118,19 @@ public class Nave extends ObjetoVolador {
 
     @Override
     public void draw(Graphics2D g2d, int anchoPantalla, int altoPantalla) {
-        int ancho = 90;
-        int alto = 90;
-
         posicionY = altoPantalla / 2.0 + 80;
+        renderer.draw(g2d, this);
+    }
 
-        if (sprite != null) {
-            g2d.drawImage(sprite, (int) posicionX - ancho / 2, (int) posicionY - alto / 2, ancho, alto, null);
-        }
+    public BufferedImage getSprite() {
+        return sprite;
+    }
+
+    public int getAncho() {
+        return ancho;
+    }
+
+    public int getAlto() {
+        return alto;
     }
 }

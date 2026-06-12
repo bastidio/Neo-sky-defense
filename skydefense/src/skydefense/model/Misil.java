@@ -1,9 +1,9 @@
 package skydefense.model;
 
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.Random;
-import java.awt.Rectangle;
 
 public class Misil extends ObjetoVolador {
 
@@ -15,11 +15,17 @@ public class Misil extends ObjetoVolador {
     private double velocidadCaida;
     private BufferedImage sprite;
 
+    private RenderizadorMisil renderer;
+
+    private final int ancho = 28;
+    private final int alto = 58;
+
     public Misil(double posicionX, int altitudInicial, double velocidadCaida, BufferedImage sprite) {
         this.posicionX = posicionX;
         this.altitudActual = altitudInicial;
         this.velocidadCaida = velocidadCaida;
         this.sprite = sprite;
+        this.renderer = new RenderizadorMisil();
 
         Random random = new Random();
         this.explota = random.nextDouble() < 0.80;
@@ -57,26 +63,36 @@ public class Misil extends ObjetoVolador {
     public int getAltitudActual() {
         return altitudActual;
     }
+
     public Rectangle getHitbox() {
-        int ancho = 28;
-        int alto = 58;
-        return new Rectangle((int) posicionX - ancho / 2, (int) posicionY - alto / 2, ancho, alto);
+        return new Rectangle(
+            (int) posicionX - ancho / 2,
+            (int) posicionY - alto / 2,
+            ancho,
+            alto
+        );
     }
 
     @Override
     public void draw(Graphics2D g2d, int anchoPantalla, int altoPantalla) {
-        int ancho = 28;
-        int alto = 58;
-
         posicionY = convertirAltitudAY(altoPantalla);
-
-        if (sprite != null) {
-            g2d.drawImage(sprite, (int) posicionX - ancho / 2, (int) posicionY - alto / 2, ancho, alto, null);
-        }
+        renderer.draw(g2d, this, altoPantalla);
     }
 
     private double convertirAltitudAY(int altoPantalla) {
         double proporcion = (altitudActual - 500) / 4500.0;
         return altoPantalla - 60 - proporcion * (altoPantalla - 120);
+    }
+
+    public BufferedImage getSprite() {
+        return sprite;
+    }
+
+    public int getAncho() {
+        return ancho;
+    }
+
+    public int getAlto() {
+        return alto;
     }
 }

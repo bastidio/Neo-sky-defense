@@ -1,9 +1,9 @@
 package skydefense.model;
 
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.Random;
-import java.awt.Rectangle;
 
 public class Dron extends ObjetoVolador {
 
@@ -15,13 +15,19 @@ public class Dron extends ObjetoVolador {
     private double velocidadPropia;
 
     private BufferedImage spriteDron;
-    private BufferedImage spriteMisil;
+    private FabricaMisil fabricaMisil;
 
     private Random random = new Random();
 
-    public Dron(int anchoPantalla, BufferedImage spriteDron, BufferedImage spriteMisil, double velocidadBase) {
+    private RenderizadorDron renderizador;
+
+    private final int ancho = 75;
+    private final int alto = 75;
+
+    public Dron(int anchoPantalla, BufferedImage spriteDron, FabricaMisil fabricaMisil, double velocidadBase) {
         this.spriteDron = spriteDron;
-        this.spriteMisil = spriteMisil;
+        this.fabricaMisil = fabricaMisil;
+        this.renderizador = new RenderizadorDron();
 
         this.velocidadPropia = velocidadBase * (0.80 + random.nextDouble() * 0.60);
 
@@ -34,11 +40,6 @@ public class Dron extends ObjetoVolador {
         }
 
         this.tiempoHastaProximoDisparo = 0.6 + random.nextDouble() * 2.2;
-    }
-    public Rectangle getHitbox() {
-        int ancho = 75;
-        int alto = 75;
-        return new Rectangle((int) posicionX - ancho / 2, (int) posicionY - alto / 2, ancho, alto);
     }
 
     @Override
@@ -55,9 +56,7 @@ public class Dron extends ObjetoVolador {
 
         if (tiempoHastaProximoDisparo <= 0) {
             misilesRestantes--;
-
             tiempoHastaProximoDisparo = frecuenciaBase * (0.65 + random.nextDouble() * 1.10);
-
             return lanzarMisil(velocidadMisil);
         }
 
@@ -65,7 +64,7 @@ public class Dron extends ObjetoVolador {
     }
 
     private Misil lanzarMisil(double velocidadMisil) {
-        return new Misil(posicionX, altitud - 250, velocidadMisil, spriteMisil);
+        return fabricaMisil.crearMisil(posicionX, altitud - 250, velocidadMisil);
     }
 
     public void verificarSalida(int anchoPantalla) {
@@ -80,15 +79,30 @@ public class Dron extends ObjetoVolador {
         }
     }
 
+    public Rectangle getHitbox() {
+        return new Rectangle(
+            (int) posicionX - ancho / 2,
+            (int) posicionY - alto / 2,
+            ancho,
+            alto
+        );
+    }
+
     @Override
     public void draw(Graphics2D g2d, int anchoPantalla, int altoPantalla) {
-        int ancho = 75;
-        int alto = 75;
-
         posicionY = 75;
+        renderizador.draw(g2d, this);
+    }
 
-        if (spriteDron != null) {
-            g2d.drawImage(spriteDron, (int) posicionX - ancho / 2, (int) posicionY - alto / 2, ancho, alto, null);
-        }
+    public BufferedImage getSpriteDron() {
+        return spriteDron;
+    }
+
+    public int getAncho() {
+        return ancho;
+    }
+
+    public int getAlto() {
+        return alto;
     }
 }

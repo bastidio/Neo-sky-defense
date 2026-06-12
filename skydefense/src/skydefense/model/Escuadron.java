@@ -13,16 +13,17 @@ public class Escuadron {
     private int topeDrones = 4;
 
     private double tiempoParaProximoDron = 0;
+
     private Random random = new Random();
 
     private ArrayList<Dron> dronesActivos = new ArrayList<>();
 
-    private BufferedImage spriteDron;
-    private BufferedImage spriteMisil;
+    private FabricaDron fabricaDron;
 
     public Escuadron(BufferedImage spriteDron, BufferedImage spriteMisil) {
-        this.spriteDron = spriteDron;
-        this.spriteMisil = spriteMisil;
+    	FabricaMisil fabricaMisil = new FabricaMisil(spriteMisil);
+        this.fabricaDron = new FabricaDron(spriteDron, fabricaMisil);
+
         this.tiempoParaProximoDron = 0.4 + random.nextDouble() * 1.3;
     }
 
@@ -38,7 +39,9 @@ public class Escuadron {
         tiempoParaProximoDron -= delta;
 
         if (tiempoParaProximoDron <= 0) {
-            dronesActivos.add(new Dron(anchoPantalla, spriteDron, spriteMisil, nivel.getVelocidadDrones()));
+            Dron dron = fabricaDron.crearDron(anchoPantalla, nivel.getVelocidadDrones());
+
+            dronesActivos.add(dron);
             dronesGenerados++;
 
             tiempoParaProximoDron = 0.7 + random.nextDouble() * 2.0;
