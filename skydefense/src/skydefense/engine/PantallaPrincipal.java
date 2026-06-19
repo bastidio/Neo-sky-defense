@@ -213,14 +213,12 @@ public class PantallaPrincipal implements EstadoPantalla {
         switch (index) {
             case 0: // PLAY
                 audio.detenerMusicaLogo();
-                menuContexto.iniciarJuego(); // Llama al método de Menu.java que arranca el juego
+                menuContexto.cambiarPantalla(new PantallaPresentacion(menuContexto));
                 break;
             case 1: // SCORES
-                // Te lleva a la pantalla de puntajes (Leaderboard)
-                menuContexto.cambiarPantalla(new PantallaLeaderboard(menuContexto));
+                System.out.println("Ir a Scores (Aún no implementada)");
                 break;
             case 2: // OPTIONS
-                // Te lleva a la pantalla de Opciones que arreglamos antes
                 menuContexto.cambiarPantalla(new PantallaOpciones(menuContexto));
                 break;
             case 3: // EXIT
