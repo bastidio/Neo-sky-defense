@@ -20,7 +20,7 @@ public class Main {
             ventana.setIconImage(iconoVentana);
 
             // Instanciamos el panel del menú (que ahora es un JPanel)
-            Menu panelMenu = new Menu();
+            Menu panelMenu = new Menu(true);
             
             // Lo añadimos a la ventana
             ventana.add(panelMenu);
