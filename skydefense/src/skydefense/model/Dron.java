@@ -21,13 +21,14 @@ public class Dron extends ObjetoVolador {
 
     private RenderizadorDron renderizador;
 
-    private final int ancho = 75;
-    private final int alto = 75;
+   
 
     public Dron(int anchoPantalla, BufferedImage spriteDron, FabricaMisil fabricaMisil, double velocidadBase) {
         this.spriteDron = spriteDron;
         this.fabricaMisil = fabricaMisil;
         this.renderizador = new RenderizadorDron();
+        this.alto = 75;
+        this.ancho = 75;
 
         this.velocidadPropia = velocidadBase * (0.80 + random.nextDouble() * 0.60);
 
@@ -79,14 +80,7 @@ public class Dron extends ObjetoVolador {
         }
     }
 
-    public Rectangle getHitbox() {
-        return new Rectangle(
-            (int) posicionX - ancho / 2,
-            (int) posicionY - alto / 2,
-            ancho,
-            alto
-        );
-    }
+    
 
     @Override
     public void draw(Graphics2D g2d, int anchoPantalla, int altoPantalla) {

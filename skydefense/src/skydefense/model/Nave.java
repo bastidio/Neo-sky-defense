@@ -20,8 +20,7 @@ public class Nave extends ObjetoVolador {
 
     private RenderizadorNave renderer;
 
-    private final int ancho = 90;
-    private final int alto = 90;
+ 
 
     public Nave(BufferedImage sprite, int anchoPantalla, int altoPantalla) {
         this.sprite = sprite;
@@ -30,6 +29,8 @@ public class Nave extends ObjetoVolador {
         this.altitud = 3000;
         this.energia = 100;
         this.renderer = new RenderizadorNave();
+        this.ancho = 75;
+        this.alto = 75;
     }
 
     @Override
@@ -91,14 +92,7 @@ public class Nave extends ObjetoVolador {
         return altitud;
     }
 
-    public Rectangle getHitbox() {
-        return new Rectangle(
-            (int) posicionX - ancho / 2,
-            (int) posicionY - alto / 2,
-            ancho,
-            alto
-        );
-    }
+    
 
     public void setIzquierda(boolean izquierda) {
         this.izquierda = izquierda;

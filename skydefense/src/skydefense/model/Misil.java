@@ -17,8 +17,7 @@ public class Misil extends ObjetoVolador {
 
     private RenderizadorMisil renderer;
 
-    private final int ancho = 28;
-    private final int alto = 58;
+  
 
     public Misil(double posicionX, int altitudInicial, double velocidadCaida, BufferedImage sprite) {
         this.posicionX = posicionX;
@@ -30,6 +29,8 @@ public class Misil extends ObjetoVolador {
         Random random = new Random();
         this.explota = random.nextDouble() < 0.80;
         this.altitudDetonacion = 1200 + random.nextInt(3301);
+        this.ancho = 50;
+        this.alto = 50;
     }
 
     @Override
@@ -64,14 +65,7 @@ public class Misil extends ObjetoVolador {
         return altitudActual;
     }
 
-    public Rectangle getHitbox() {
-        return new Rectangle(
-            (int) posicionX - ancho / 2,
-            (int) posicionY - alto / 2,
-            ancho,
-            alto
-        );
-    }
+    
 
     @Override
     public void draw(Graphics2D g2d, int anchoPantalla, int altoPantalla) {
