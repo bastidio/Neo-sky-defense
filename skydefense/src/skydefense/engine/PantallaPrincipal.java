@@ -216,7 +216,7 @@ public class PantallaPrincipal implements EstadoPantalla {
                 menuContexto.cambiarPantalla(new PantallaPresentacion(menuContexto));
                 break;
             case 1: // SCORES
-                System.out.println("Ir a Scores (Aún no implementada)");
+                menuContexto.cambiarPantalla(new PantallaLeaderboard(menuContexto));
                 break;
             case 2: // OPTIONS
                 menuContexto.cambiarPantalla(new PantallaOpciones(menuContexto));
