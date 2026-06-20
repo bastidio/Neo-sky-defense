@@ -13,7 +13,7 @@ public class Menu extends JPanel {
     private Rectangle boundsVentana;
 
     public Menu() {
-        this(true);
+        this(false);
     }
 
     public Menu(boolean mostrarLogoInicial) {
