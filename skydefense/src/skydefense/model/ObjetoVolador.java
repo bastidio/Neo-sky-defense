@@ -24,19 +24,12 @@ public abstract class ObjetoVolador {
         );
     }
 
-    public boolean estaActivo() {
-        return activo;
-    }
+    public boolean estaActivo() { return activo; }
+    public double getPosicionX() { return posicionX; }
+    public double getPosicionY() { return posicionY; }
+    public void desactivar() { activo = false; }
 
-    public double getPosicionX() {
-        return posicionX;
-    }
-
-    public double getPosicionY() {
-        return posicionY;
-    }
-
-    public void desactivar() {
-        activo = false;
-    }
+    // Subidos a la clase padre
+    public int getAncho() { return ancho; }
+    public int getAlto() { return alto; }
 }

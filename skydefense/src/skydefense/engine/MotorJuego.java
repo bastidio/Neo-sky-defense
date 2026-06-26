@@ -63,14 +63,18 @@ public class MotorJuego {
         if (juegoTerminado || juegoPausado) return;
 
         nave.update(delta);
-        nave.limitarPantalla(anchoPantalla);
+        
+        // 1. Le pasamos el Ancho y el Alto a la nave para los topes dinámicos
+        nave.limitarPantalla(anchoPantalla, panelPadre.getHeight());
 
         ArrayList<Misil> nuevosMisiles = escuadron.update(delta, nivel, anchoPantalla);
         misiles.addAll(nuevosMisiles);
 
         for (int i = misiles.size() - 1; i >= 0; i--) {
             Misil misil = misiles.get(i);
-            misil.update(delta);
+            
+            // Le pasamos el alto de la ventana en tiempo real
+            misil.update(delta, panelPadre.getHeight()); 
 
             if (!misil.estaActivo()) {
                 if (misil.fueDetonado()) {
@@ -88,27 +92,7 @@ public class MotorJuego {
                 explosiones.remove(i);
             }
         }
-
-        Rectangle hitboxNave = nave.getHitbox();
-        for (int i = misiles.size() - 1; i >= 0; i--) {
-            Misil misil = misiles.get(i);
-
-            if (misil.estaActivo() && hitboxNave.intersects(misil.getHitbox())) {
-                nave.reducirEnergia(40);
-                explosiones.add(new Explosion(misil.getPosicionX(), misil.getPosicionY(), GestorRecursos.getInstancia().getAnimacionExplosion()));
-                misiles.remove(i);
-
-                if (nave.energiaAgotada()) {
-                    jugador.perderVida();
-                    nave.restaurarEnergia();
-                }
-
-                if (jugador.estaMuerto()) {
-                    terminarJuego(false);
-                }
-            }
-        }
-
+        
         if (escuadron.nivelTerminado() && misiles.isEmpty() && explosiones.isEmpty()) {
             if (jugador.sumarPuntos(300)) {
                 GestorAudio.getInstancia().reproducirSonidoVidaExtra();
@@ -128,7 +112,11 @@ public class MotorJuego {
 
     private void procesarExplosion(Misil misil) {
         explosiones.add(new Explosion(misil.getPosicionX(), misil.getPosicionY(), GestorRecursos.getInstancia().getAnimacionExplosion()));
-        double distancia = misil.calcularDistancia(nave.getPosicionX(), nave.getAltitud());
+        
+        // 2. Geometría 2D exacta: Mide la distancia en píxeles reales de la pantalla
+        double distanciaX = misil.getPosicionX() - nave.getPosicionX();
+        double distanciaY = misil.getPosicionY() - nave.getPosicionY();
+        double distancia = Math.sqrt(distanciaX * distanciaX + distanciaY * distanciaY);
 
         if (distancia > 150) {
             if (jugador.sumarPuntos(40)) GestorAudio.getInstancia().reproducirSonidoVidaExtra();
@@ -138,6 +126,7 @@ public class MotorJuego {
         } else if (distancia >= 20 && distancia < 80) {
             nave.reducirEnergia(40);
         } else {
+            // Impacto crítico: Resta los 100 de energía directamente
             jugador.perderVida();
         }
 

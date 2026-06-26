@@ -15,17 +15,14 @@ public class Dron extends ObjetoVolador {
     private double velocidadPropia;
 
     private BufferedImage spriteDron;
-    private FabricaMisil fabricaMisil;
+    private FabricaEntidades fabricaEntidades; // Fábrica nueva
 
     private Random random = new Random();
-
     private RenderizadorDron renderizador;
 
-   
-
-    public Dron(int anchoPantalla, BufferedImage spriteDron, FabricaMisil fabricaMisil, double velocidadBase) {
+    public Dron(int anchoPantalla, BufferedImage spriteDron, FabricaEntidades fabricaEntidades, double velocidadBase) {
         this.spriteDron = spriteDron;
-        this.fabricaMisil = fabricaMisil;
+        this.fabricaEntidades = fabricaEntidades;
         this.renderizador = new RenderizadorDron();
         this.alto = 75;
         this.ancho = 75;
@@ -49,9 +46,7 @@ public class Dron extends ObjetoVolador {
     }
 
     public Misil intentarDisparar(double delta, double frecuenciaBase, double velocidadMisil) {
-        if (misilesRestantes <= 0) {
-            return null;
-        }
+        if (misilesRestantes <= 0) return null;
 
         tiempoHastaProximoDisparo -= delta;
 
@@ -60,27 +55,19 @@ public class Dron extends ObjetoVolador {
             tiempoHastaProximoDisparo = frecuenciaBase * (0.65 + random.nextDouble() * 1.10);
             return lanzarMisil(velocidadMisil);
         }
-
         return null;
     }
 
     private Misil lanzarMisil(double velocidadMisil) {
-        return fabricaMisil.crearMisil(posicionX, altitud - 250, velocidadMisil);
+        return fabricaEntidades.crearMisil(posicionX, altitud - 250, velocidadMisil);
     }
 
     public void verificarSalida(int anchoPantalla) {
         if (misilesRestantes <= 0) {
-            if (direccion == 1 && posicionX > anchoPantalla + 100) {
-                activo = false;
-            }
-
-            if (direccion == -1 && posicionX < -100) {
-                activo = false;
-            }
+            if (direccion == 1 && posicionX > anchoPantalla + 100) activo = false;
+            if (direccion == -1 && posicionX < -100) activo = false;
         }
     }
-
-    
 
     @Override
     public void draw(Graphics2D g2d, int anchoPantalla, int altoPantalla) {
@@ -88,15 +75,5 @@ public class Dron extends ObjetoVolador {
         renderizador.draw(g2d, this);
     }
 
-    public BufferedImage getSpriteDron() {
-        return spriteDron;
-    }
-
-    public int getAncho() {
-        return ancho;
-    }
-
-    public int getAlto() {
-        return alto;
-    }
+    public BufferedImage getSpriteDron() { return spriteDron; }
 }

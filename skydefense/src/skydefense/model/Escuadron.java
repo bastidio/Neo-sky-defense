@@ -18,12 +18,10 @@ public class Escuadron {
 
     private ArrayList<Dron> dronesActivos = new ArrayList<>();
 
-    private FabricaDron fabricaDron;
+    private FabricaEntidades fabricaEntidades;
 
     public Escuadron(BufferedImage spriteDron, BufferedImage spriteMisil) {
-    	FabricaMisil fabricaMisil = new FabricaMisil(spriteMisil);
-        this.fabricaDron = new FabricaDron(spriteDron, fabricaMisil);
-
+        this.fabricaEntidades = new FabricaEntidades(spriteDron, spriteMisil);
         this.tiempoParaProximoDron = 0.4 + random.nextDouble() * 1.3;
     }
 
@@ -39,7 +37,7 @@ public class Escuadron {
         tiempoParaProximoDron -= delta;
 
         if (tiempoParaProximoDron <= 0) {
-            Dron dron = fabricaDron.crearDron(anchoPantalla, nivel.getVelocidadDrones());
+            Dron dron = fabricaEntidades.crearDron(anchoPantalla, nivel.getVelocidadDrones());
 
             dronesActivos.add(dron);
             dronesGenerados++;

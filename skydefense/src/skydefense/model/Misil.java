@@ -1,15 +1,13 @@
 package skydefense.model;
 
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.Random;
 
 public class Misil extends ObjetoVolador {
 
-    private int altitudActual;
-    private int altitudDetonacion;
-    private boolean explota;
+    // Ahora guardamos un porcentaje (0.0 a 1.0) en vez de un píxel fijo
+    private double factorDetonacion; 
     private boolean detonado = false;
 
     private double velocidadCaida;
@@ -17,32 +15,47 @@ public class Misil extends ObjetoVolador {
 
     private RenderizadorMisil renderer;
 
-  
-
     public Misil(double posicionX, int altitudInicial, double velocidadCaida, BufferedImage sprite) {
         this.posicionX = posicionX;
-        this.altitudActual = altitudInicial;
-        this.velocidadCaida = velocidadCaida;
+        this.posicionY = 75; 
+        
+        this.velocidadCaida = velocidadCaida * 0.15; 
         this.sprite = sprite;
         this.renderer = new RenderizadorMisil();
 
         Random random = new Random();
-        this.explota = random.nextDouble() < 0.80;
-        this.altitudDetonacion = 1200 + random.nextInt(3301);
+        // Sorteamos en qué porcentaje de la zona de juego va a explotar (ej: 0.5 es la mitad)
+        this.factorDetonacion = random.nextDouble(); 
+
         this.ancho = 50;
         this.alto = 50;
     }
 
     @Override
     public void update(double delta) {
-        altitudActual -= velocidadCaida * delta;
+        // Lo dejamos vacío para cumplir con la herencia de ObjetoVolador, 
+        // pero usaremos el método sobrecargado de abajo.
+    }
 
-        if (explota && altitudActual <= altitudDetonacion) {
+    // NUEVO MÉTODO: Recibe el altoPantalla en tiempo real
+    public void update(double delta, int altoPantalla) {
+        posicionY += velocidadCaida * delta;
+
+        // Calculamos los límites reales de la pantalla AHORA MISMO
+        double limiteSuperior = 300; // Tu pared invisible
+        double limiteInferior = altoPantalla - 50; // El piso de la pantalla
+        
+        // Traducimos el porcentaje sorteado al píxel exacto de esta pantalla
+        double yDetonacion = limiteSuperior + (factorDetonacion * (limiteInferior - limiteSuperior));
+
+        // Todos explotan sí o sí al llegar a su marca
+        if (posicionY >= yDetonacion) {
             detonado = true;
             activo = false;
         }
 
-        if (altitudActual < 500) {
+        // Limpieza de memoria dinámica (se borra solo si sale de TU pantalla actual)
+        if (posicionY > altoPantalla + 100) {
             activo = false;
         }
     }
@@ -51,42 +64,12 @@ public class Misil extends ObjetoVolador {
         return detonado;
     }
 
-    public double calcularDistancia(double xNave, int altitudNave) {
-        double distanciaHorizontal = Math.abs(posicionX - xNave) * 5;
-        double distanciaVertical = Math.abs(altitudActual - altitudNave);
-
-        return Math.sqrt(
-            distanciaHorizontal * distanciaHorizontal +
-            distanciaVertical * distanciaVertical
-        );
-    }
-
-    public int getAltitudActual() {
-        return altitudActual;
-    }
-
-    
-
     @Override
     public void draw(Graphics2D g2d, int anchoPantalla, int altoPantalla) {
-        posicionY = convertirAltitudAY(altoPantalla);
         renderer.draw(g2d, this, altoPantalla);
-    }
-
-    private double convertirAltitudAY(int altoPantalla) {
-        double proporcion = (altitudActual - 500) / 4500.0;
-        return altoPantalla - 60 - proporcion * (altoPantalla - 120);
     }
 
     public BufferedImage getSprite() {
         return sprite;
-    }
-
-    public int getAncho() {
-        return ancho;
-    }
-
-    public int getAlto() {
-        return alto;
     }
 }
