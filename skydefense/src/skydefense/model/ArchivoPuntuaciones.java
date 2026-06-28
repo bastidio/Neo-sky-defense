@@ -17,7 +17,6 @@ public class ArchivoPuntuaciones {
         ArrayList<Puntuaciones.Puntaje> puntajes = new ArrayList<>();
 
         try {
-        	System.out.println("Ruta JSON: " + new File(rutaArchivo).getAbsolutePath());
             File archivo = new File(rutaArchivo);
 
             if (!archivo.exists()) {
