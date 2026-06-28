@@ -27,20 +27,28 @@ public class GestorRecursos {
     private String baseRes;
     
     private GestorRecursos() {
-    	if (new File("skydefense/res/").exists()) {
-            baseRes = "skydefense/res/";
-        } else {
-            baseRes = "res/";
-        }
+    	if (new File("res/sprite/nave.png").exists()) {
+    	    baseRes = "res/";
+    	} else if (new File("skydefense/res/sprite/nave.png").exists()) {
+    	    baseRes = "skydefense/res/";
+    	} else if (new File("skydefense/skydefense/res/sprite/nave.png").exists()) {
+    	    baseRes = "skydefense/skydefense/res/";
+    	} else {
+    	    baseRes = "res/";
+    	}
         cargarFuentes();
         cargarImagenes();
     }
-
+    
     public static GestorRecursos getInstancia() {
         if (instancia == null) {
             instancia = new GestorRecursos();
         }
         return instancia;
+    }
+
+    public String getBaseRes() {
+        return baseRes;
     }
 
     private void cargarFuentes() {

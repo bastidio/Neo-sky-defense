@@ -45,7 +45,7 @@ public class Nave extends ObjetoVolador {
         if (posicionX < 50) posicionX = 50;
         if (posicionX > anchoPantalla - 50) posicionX = anchoPantalla - 50;
 
-        // Pared invisible arriba (ej: 300 px) para no pisar a los drones
+        // Pared invisible arriba para no pisar a los drones
         if (posicionY < 300) posicionY = 300;
         
         // Tope en el piso (borde inferior de la ventana)

@@ -174,7 +174,6 @@ public class PantallaPrincipal implements EstadoPantalla {
 
         // Si no se hizo clic en ningún botón, la nave dispara
         if (!clickEnBoton) {
-            audio.reproducirSonidoDisparo();
             naveMenu.disparar(mouseX, mouseY);
         }
     }

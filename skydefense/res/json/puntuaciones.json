@@ -1,5 +1,6 @@
 {
   "puntajes": [
+    { "nombre": "FTG", "puntaje": 9780 },
     { "nombre": "BRU", "puntaje": 9340 },
     { "nombre": "PPP", "puntaje": 8820 },
     { "nombre": "FEL", "puntaje": 8660 },

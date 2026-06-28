@@ -18,11 +18,7 @@ public class NaveMenu {
         this.panel = panel;
         this.disparos = new ArrayList<>();
         
-        try {
-            spriteNave = ImageIO.read(new File("skydefense/res/sprite/nave.png"));
-        } catch (Exception e) {
-            System.err.println("No se pudo cargar la imagen de la nave en NaveMenu.");
-        }
+        spriteNave = GestorRecursos.getInstancia().getSpriteNave();
     }
 
     public void actualizar() {

@@ -6,15 +6,18 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import skydefense.engine.GestorRecursos;
 
 public class ArchivoPuntuaciones {
 
-    private final String rutaArchivo = "skydefense/res/json/puntuaciones.json";
+	private final String rutaArchivo =
+	        GestorRecursos.getInstancia().getBaseRes() + "json/puntuaciones.json";
 
     public ArrayList<Puntuaciones.Puntaje> cargar() {
         ArrayList<Puntuaciones.Puntaje> puntajes = new ArrayList<>();
 
         try {
+        	System.out.println("Ruta JSON: " + new File(rutaArchivo).getAbsolutePath());
             File archivo = new File(rutaArchivo);
 
             if (!archivo.exists()) {
@@ -24,7 +27,8 @@ public class ArchivoPuntuaciones {
                 return puntajes;
             }
 
-            String contenido = Files.readString(Path.of(rutaArchivo));
+            String contenido = Files.readString(archivo.toPath());
+            
 
             Pattern pattern = Pattern.compile("\\{\\s*\"nombre\"\\s*:\\s*\"(.*?)\"\\s*,\\s*\"puntaje\"\\s*:\\s*(\\d+)\\s*\\}");
             Matcher matcher = pattern.matcher(contenido);
@@ -39,6 +43,7 @@ public class ArchivoPuntuaciones {
 
         } catch (Exception e) {
             System.err.println("No se pudo cargar el archivo de puntuaciones.");
+            e.printStackTrace();
         }
 
         return puntajes;
@@ -76,6 +81,7 @@ public class ArchivoPuntuaciones {
 
         } catch (Exception e) {
             System.err.println("No se pudo guardar el archivo de puntuaciones.");
+            e.printStackTrace();
         }
     }
 
